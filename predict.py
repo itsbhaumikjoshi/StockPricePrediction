@@ -10,23 +10,21 @@ base = {
 # watch any five stocks
 watch = []
 
-# returns the current date and time
+# returns date and time
 def getDateTime(s='today'):
     today = datetime.datetime.today()
     if s == 'yesterday':
-        return {
-            "date":(today - datetime.timedelta(days = 1)).strftime("%d-%m-%Y"),
-            "time":(today - datetime.timedelta(days = 1)).strftime("%H:%M:%S")
-        }
+        date = (today - datetime.timedelta(days = 1)).strftime("%d-%m-%Y"),
+        time = (today - datetime.timedelta(days = 1)).strftime("%H:%M:%S")
     elif s == 'tomorrow':
-        return {
-            "date":(today + datetime.timedelta(days = 1)).strftime("%d-%m-%Y"),
-            "time":(today + datetime.timedelta(days = 1)).strftime("%H:%M:%S")
-        }
+        date = (today + datetime.timedelta(days = 1)).strftime("%d-%m-%Y"),
+        time = (today + datetime.timedelta(days = 1)).strftime("%H:%M:%S")
     elif s == 'today':
-        return {
-            "date": datetime.datetime.today().strftime("%d-%m-%Y"),
-            "time": datetime.datetime.today().strftime("%H:%M:%S")
+        date = datetime.datetime.today().strftime("%d-%m-%Y"),
+        time = datetime.datetime.today().strftime("%H:%M:%S")
+    return {
+            "date":date,
+            "time":time
         }
 
 def loadTransactions():
@@ -54,3 +52,18 @@ def loadTransactions():
 
 # keep the track the current day transactions
 transactions = loadTransactions()
+
+def buy(o):
+    # add the object o to the bought and onhold lists
+    transactions['bought'].append(o)
+    transactions['onhold'].append(o)
+    print(f"bought {o}")
+
+def sell(o):
+    # add the object to sold list
+    transactions['sold'].append(o)
+    # remove the object o from onhold list
+    for hold in transactions['onhold']:
+        if(hold['id']==o['id']):
+            transactions['onhold'].pop(o['id'])
+    print(f"sold {o}")
