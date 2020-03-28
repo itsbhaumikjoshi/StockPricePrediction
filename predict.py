@@ -1,5 +1,8 @@
+import requests
 import json
 import datetime
+from time import sleep
+from kalman import Kalman
 
 # base to write an empty JSON file
 base = {
@@ -8,7 +11,7 @@ base = {
     "sold":[]
 }
 # watch any five stocks
-watch = []
+stocks = []
 
 # returns date and time
 def getDateTime(s='today'):
@@ -33,9 +36,6 @@ def loadTransactions():
         with open(f"{getDateTime()['date']}.json", "r") as transaction:
             return json.load(transaction)
     except:
-        # create a json data file for today and write the base data to it
-        with open(f"{getDateTime()['date']}.json", "w") as transaction:
-            transaction.write(json.dumps(base, indent=4))
         try:
             # check the yesterday's json data file, if there are any stocks onhold? if there are then return the onhold transactions to today
             with open(f"{getDateTime('yesterday')['date']}.json", "r") as transaction:
@@ -67,3 +67,45 @@ def sell(o):
         if(hold['id']==o['id']):
             transactions['onhold'].pop(o['id'])
     print(f"sold {o}")
+
+def getStockData(stock):
+    try:
+        YOUR_API_KEY = ''
+        # get the current stock response
+        response = requests.get(f'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={stock}&apikey={YOUR_API_KEY}')
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(f"Response for the {stock} returned with status code: {response.status_code}")
+            return None
+    except:
+        print(f'Error fetching data for {stock}')
+        return None
+
+def writeTransactions():
+    # create a json data file for today and write the base data to it
+    try:
+        # write transactions to the file
+        with open(f"{getDateTime()['date']}.json", "w") as transaction:
+            transaction.write(json.dumps(transactions, indent=4))
+    except:
+        print('Failed to write the transactions to the file')
+
+def main():
+    for stock in stocks:
+        # get the info for the stock
+        data = getStockData(stock)
+        if data == None:
+            break
+        else:
+            # get the kalman filter
+            kalman = Kalman()
+            # estimate the price using the kalman filter
+            # decide whether to buy it or not
+            # make the respective changes to the transactions dict
+            # write the transaction dict to the JSON file if they have been changed
+            writeTransactions()
+        # As we are limited only with 5 requests per minute
+        sleep(12)
+if __name__ == "__main__": 
+    main() 
