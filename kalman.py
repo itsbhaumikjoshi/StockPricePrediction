@@ -1,38 +1,37 @@
-import numpy as np
+from numpy import array, dot, eye
+from numpy.linalg import inv
 
 
 class KalmanFilter:
-    def __init__(self, x: float):
-        self.x = np.array([x, 0])
-        self.p = np.eye(self.x.shape[0])
-        self.dt = 300 # number of seconds
-        self.f = np.array([[1, self.dt], [0, 1]])
-        self.g = np.array([[1/2*(self.dt**2)],[self.dt]])
-        self.h = np.array([[1, 0]])
+    def __init__(self, closePrice, dt):
+        # initializing ground parameters
+        self.dt = dt # number of seconds / time scale
+        self.f = array([[1, self.dt], [0, 1]])
+        self.x = array([[closePrice], [0]])
+        self.p = eye(self.x.shape[0])
+        self.h = array([[1, 0],[0, 0]])
+        self.r = eye(self.x.shape[0])
 
+    # Predicting the next state / price
     def predict(self):
-        # x = fx
-        # p = fp(f transpose) + g(g transpose)
-        self.x = self.f.dot(self.x)
-        self.p = self.f.dot(self.p).dot(self.f.T) + self.g.dot(self.g.T)
+        # x = f*x
+        self.x = dot(self.f, self.x)
+        # p = (f*p)*(f transpose) + identity
+        self.p = dot(dot(self.f, self.p), self.f.T) + eye(self.x.shape[0])
+        return self.x
 
-    def update(self, val, variance):
-        # y = z - Hx
-        # s = hp(h transpose) + r
-        # k = p(h transpose) * (s inverse)
-        # x = x + ky
-        # p = (i - kh) * p
-        self.y = np.array([val]) - self.h.dot(self.x)
-        s = self.h.dot(self.p).dot(self.h.T) + np.array([variance])
-        self.k = self.p.dot(self.h.T).dot(np.linalg.inv(s))
-        # Calculate Kalman gain (3x1)
+    # updating the parameters
+    def update(self, originalPrice):
+        # y = orignal - h*x
+        self.y = originalPrice - dot(self.h, self.x)
+        # s = h * (p*(h transpose)) + r
+        s = dot(self.h, dot(self.p, self.h.T)) + self.r
+        # k = p*(h transpose) * (s^-1)
+        self.k = dot(dot(self.p, self.h.T), inv(s))
+        # x = x + k*y
+        self.x = self.x + dot(self.k, self.y)
+        # p = (identity - (k*h)) * p
+        self.p = dot((eye(self.x.shape[0]) - dot(self.k, self.h)), self.p)
 
-        # Update x and P
-        self.x = self.x + self.k.dot(self.y)
-        self.P = (np.eye(2) - self.k.dot(self.h)).dot(self.p)
-    
-    def get_covariance_matrix(self):
-        return self.p
-
-    def get_pred_value(self):
-        return self.x[0]
+    def getParameters(self):
+        return f"Kalman Gian: {self.k}, closedPrice: {self.x}"

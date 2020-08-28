@@ -38,7 +38,7 @@ def main():
         # get the info for the stock
         data = GetStockData(stock)
         # get the kalman filter
-        kalman = KalmanFilter(x=20)
+        kalman = KalmanFilter(x = 20.0, dt = 300)
         # estimate the price using the kalman filter
         # decide whether to buy it or not
         transactions = buy(transactions, data)
