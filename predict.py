@@ -1,9 +1,13 @@
+# import libs
 from time import sleep
+
+# import files
 from kalman import KalmanFilter
 from utils import LoadTransactions, WriteTransactions, GetStockData
 
 OPEN_TIME = ''
 CLOSE_TIME = ''
+
 
 def buy(transactions, o):
     # add the object o to the bought and onhold lists
@@ -23,6 +27,7 @@ def sell(transactions, o):
     print(f"sold {o}")
     return transactions
 
+
 def main():
     # watch your stocks
     stock = ""
@@ -38,7 +43,7 @@ def main():
         # get the info for the stock
         data = GetStockData(stock)
         # get the kalman filter
-        kalman = KalmanFilter(x = 20.0, dt = 300)
+        kalman = KalmanFilter(closePrice=20.0, dt=300)
         # estimate the price using the kalman filter
         # decide whether to buy it or not
         transactions = buy(transactions, data)
