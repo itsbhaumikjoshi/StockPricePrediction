@@ -4,9 +4,7 @@ from time import sleep
 # import files
 from kalman import KalmanFilter
 from utils import LoadTransactions, WriteTransactions, GetStockData
-
-OPEN_TIME = ''
-CLOSE_TIME = ''
+from configure import *
 
 
 def buy(transactions, o):
@@ -29,29 +27,34 @@ def sell(transactions, o):
 
 
 def main():
-    # watch your stocks
-    stock = ""
     # keep the track the current day transactions
     transactions = LoadTransactions()
+
     while(True):
-        # current state
-        currentState = None
+        # checking if the market is closed or not
+        if CURRENT_TIME < OPEN_TIME or CURRENT_TIME > CLOSE_TIME:
+            print('Stock market is closed!')
+            break
 
-        # assuming Adjusted Close at 1, it is nothing but the price closed a day before / price close for today
-        adjClose = 1
+        for stock in STOCKS:
+            # get the info for the stock
+            data = GetStockData(stock)
 
-        # get the info for the stock
-        data = GetStockData(stock)
-        # get the kalman filter
-        kalman = KalmanFilter(closePrice=20.0, dt=300)
-        # estimate the price using the kalman filter
-        # decide whether to buy it or not
-        transactions = buy(transactions, data)
-        # make the respective changes to the transactions dict
-        # write the transaction dict to the JSON file if they have been changed
-        WriteTransactions(transactions)
-        # we are waiting for 300 seconds or 5 minutes to request again
-        sleep(5*60)
+            # get the kalman filter
+            kalman = KalmanFilter(closePrice=20.0, dt=300)
+
+            # estimate the price using the kalman filter
+            # decide whether to buy it or not
+            # transactions = buy(transactions, data)
+            # make the respective changes to the transactions dict
+            # write the transaction dict to the JSON file if they have been changed
+            WriteTransactions(transactions)
+            # we are waiting for 300 seconds or 5 minutes to request again
+            sleep(300/len(STOCKS))
+            # checking if the market is closed or not
+            if CURRENT_TIME < OPEN_TIME or CURRENT_TIME > CLOSE_TIME:
+                print('Stock market is closed!')
+                break
 
 
 if __name__ == "__main__":

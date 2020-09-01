@@ -2,6 +2,8 @@ import datetime
 import json
 import requests
 
+from configure import YOUR_API_KEY
+
 base_case = {
     "bought":[],
     "onhold":[],
@@ -64,8 +66,6 @@ def WriteTransactions(transactions):
 
 def GetStockData(stock='IBM'):
     try:
-        # Enter your API key here:
-        YOUR_API_KEY = ''
         # get the current stock response
         response = requests.get(
             f'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={stock}&apikey={YOUR_API_KEY}')
