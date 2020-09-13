@@ -11,7 +11,5 @@ CLOSE_TIME = ''
 OPEN_TIME = datetime.strptime(OPEN_TIME, '%H:%M:%S')
 CLOSE_TIME = datetime.strptime(CLOSE_TIME, '%H:%M:%S')
 
-CURRENT_TIME = datetime.now().strftime("%H:%M:%S")
-
 # Enter the symbol code for the stocks to look for
 STOCKS = []
