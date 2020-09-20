@@ -1,8 +1,10 @@
+import sys
 import datetime
 import json
 import requests
+from bs4 import BeautifulSoup
 
-from configure import YOUR_API_KEY
+from configure import DEMO_STOCK
 
 base_case = {
     "bought": [],
@@ -62,23 +64,18 @@ def WriteTransactions(transactions):
         with open(f"{GetDateTime()['date']}.json", "w") as transaction:
             transaction.write(json.dumps(transactions, indent=4))
     except:
-        print(f"Unable to write to {GetDateTime()}.json file")
+        sys.exit(f"Unable to write to {GetDateTime()}.json file")
 
-
-def GetStockData(stock=None):
+def GetLiveStockData(stock=DEMO_STOCK):
     try:
-        if stock is None:
-            response = requests.get(
-                f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&outputsize=compact&apikey={YOUR_API_KEY}')
+        URL = f'https://in.finance.yahoo.com/quote/{stock}'
+        response = requests.get(URL)
+        if response.status_code is 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            stock_price = soup.find("span", {"class": "Trsdu(0.3s) Fw(b) Fz(36px) Mb(-4px) D(ib)"}).text
+            return float(stock_price)
         else:
-            # get the current stock response
-            response = requests.get(
-                f'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={stock}&apikey={YOUR_API_KEY}')
-
-        if response.status_code == 200:
-            return response.json()
-        print(
-            f"Response for the {stock} returned with status code: {response.status_code}")
+            sys.exit(f"Response for the {stock} returned with status code: {response.status_code}")
     except:
-        print(f'Error fetching data for {stock}')
+        sys.exit(f"Error fetching data for {stock}")
     return None

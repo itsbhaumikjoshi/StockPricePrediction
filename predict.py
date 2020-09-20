@@ -1,10 +1,12 @@
 # import libs
+import sys
 from time import sleep
 from datetime import datetime
 from numpy import array
+
 # import files
 from kalman import KalmanFilter
-from utils import LoadTransactions, WriteTransactions, GetStockData
+from utils import LoadTransactions, WriteTransactions, GetLiveStockData
 from configure import *
 
 def buy(transactions, o):
@@ -27,6 +29,10 @@ def sell(transactions, o):
 
 
 def main():
+    # if the day is Sunday or Saturday we won't proceed as the market would be close
+    if CURRENT_DAY == 'Sunday' or CURRENT_DAY == 'Saturday':
+        sys.exit("Can't trade on Sunday or Saturday as the market would be closed.")
+    
     # keep the track the current day transactions
     transactions = LoadTransactions()
 
@@ -38,10 +44,11 @@ def main():
     iterations = 0
 
     for stock in STOCKS:
+        stock_price = float(GetLiveStockData(stock))
         # initial Close price = 0
         stock_data[stock] = {
-            'kalman' : KalmanFilter(closePrice=0, dt=300),
-            'adjClose' : 0
+            'kalman' : KalmanFilter(closePrice=array([stock_price], dtype='float64')[0], dt=300),
+            'adjClose' : stock_price
         }
 
     while(True):
@@ -53,8 +60,8 @@ def main():
             break
 
         for stock in STOCKS:
-            # get the info for the stock
-            data = GetStockData(stock)
+            '''# get the info for the stock
+            data = 'GetStockData(stock)'
 
             open_price = list(data.values())[0]['1. open']
             close_price = list(data.values())[0]['4. close']
@@ -83,7 +90,7 @@ def main():
             # checking if the market is closed or not
             if current_time < OPEN_TIME or current_time > CLOSE_TIME:
                 print('Stock market is closed!')
-                break
+                break'''
 
         iterations += 1
 
