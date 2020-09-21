@@ -66,16 +66,24 @@ def WriteTransactions(transactions):
     except:
         sys.exit(f"Unable to write to {GetDateTime()}.json file")
 
+
 def GetLiveStockData(stock=DEMO_STOCK):
     try:
         URL = f'https://in.finance.yahoo.com/quote/{stock}'
         response = requests.get(URL)
         if response.status_code is 200:
             soup = BeautifulSoup(response.text, 'html.parser')
-            stock_price = soup.find("span", {"class": "Trsdu(0.3s) Fw(b) Fz(36px) Mb(-4px) D(ib)"}).text
-            return float(stock_price)
+            content = soup.find("div", {"class": "D(ib) Mend(20px)"})
+            stock_price = content.find(
+                "span", {"class": "Trsdu(0.3s) Fw(b) Fz(36px) Mb(-4px) D(ib)"}).text
+            market_status = content.find("span", {"data-reactid": "35"}).text
+            if "open" in market_status:
+                return float(stock_price)
+            else:
+                return None
         else:
-            sys.exit(f"Response for the {stock} returned with status code: {response.status_code}")
+            sys.exit(
+                f"Response for the {stock} returned with status code: {response.status_code}")
     except:
         sys.exit(f"Error fetching data for {stock}")
     return None

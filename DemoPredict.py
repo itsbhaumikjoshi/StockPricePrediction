@@ -56,8 +56,8 @@ def Demo(data):
 
     # to predict the next state store it and update the filter
     for value in measurements:
-        predictions.append(kalman.predict()[0][0])
         kalman.update(value)
+        predictions.append(kalman.predict()[0][0])
 
     # calculate the r2 score
     coefficient_of_dermination = r2_score(measurements, predictions)

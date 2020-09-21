@@ -28,11 +28,7 @@ def sell(transactions, o):
     return transactions
 
 
-def main():
-    # if the day is Sunday or Saturday we won't proceed as the market would be close
-    if CURRENT_DAY == 'Sunday' or CURRENT_DAY == 'Saturday':
-        sys.exit("Can't trade on Sunday or Saturday as the market would be closed.")
-    
+def main():    
     # keep the track the current day transactions
     transactions = LoadTransactions()
 
@@ -44,54 +40,38 @@ def main():
     iterations = 0
 
     for stock in STOCKS:
-        stock_price = float(GetLiveStockData(stock))
+        stock_price = array([GetLiveStockData(stock)], dtype='float64')
         # initial Close price = 0
         stock_data[stock] = {
-            'kalman' : KalmanFilter(closePrice=array([stock_price], dtype='float64')[0], dt=300),
-            'adjClose' : stock_price
+            'kalman' : KalmanFilter(closePrice=stock_price[0], dt=300),
+            'adjClose' : stock_price[0]
         }
 
     while(True):
-        # calculating current time
-        current_time = datetime.now().strftime("%H:%M:%S")
-        # checking if the market is closed or not
-        if current_time < OPEN_TIME or current_time > CLOSE_TIME:
-            print('Stock market is closed!')
-            break
-
         for stock in STOCKS:
-            '''# get the info for the stock
-            data = 'GetStockData(stock)'
+            # get the live price of the stock
+            price = array([GetLiveStockData(stock)], dtype="float64")
+            price = price[0]
 
-            open_price = list(data.values())[0]['1. open']
-            close_price = list(data.values())[0]['4. close']
+            # make the predictions using the kalman filter
+            predicted_price = stock_data[stock].kalman.predict()[0][0]
 
-            open_price = array([float(open_price)], dtype='float64')[0]
-            close_price = array([float(close_price)], dtype='float64')[0]
+            # last state
+            last_price = stock_data[stock]['adjClose']
 
-            # estimate the price using the kalman filter
-            predicted = stock_data[stock]['kalman'].predict()[0][0]
-            stock_data[stock]['kalman'].update(close_price)
-
-            if iterations > 10:
+            # for first 10 iterations we will reduce the noise in kalman filterr for better predictions
+            if (predicted_price - last_price) > 0 and iterations > 10:
                 pass
-            
-            # updating the adjPrice
-            stock_data[stock]['adjClose'] = close_price 
-            # decide whether to buy it or not
-            # transactions = buy(transactions, data)
-            # make the respective changes to the transactions dict
-            # write the transaction dict to the JSON file if they have been changed
-            WriteTransactions(transactions)
-            # we are waiting for 300 seconds or 5 minutes to request again
-            sleep(300/len(STOCKS))
-            # calculating current time
-            current_time = datetime.now().strftime("%H:%M:%S")
-            # checking if the market is closed or not
-            if current_time < OPEN_TIME or current_time > CLOSE_TIME:
-                print('Stock market is closed!')
-                break'''
 
+            # update the kalman filter
+            stock_data[stock].kalman.update(price)
+
+            # current price will be the last price for the next iteration
+            stock_data[stock]['adjClose'] = price
+
+
+        # we will wait 5 minutes for the price to change
+        sleep(300)
         iterations += 1
 
 
