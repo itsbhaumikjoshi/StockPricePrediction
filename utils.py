@@ -4,11 +4,11 @@ import json
 import requests
 from bs4 import BeautifulSoup
 
-from configure import DEMO_STOCK
+from configure import DEMO_STOCK, AMOUNT
 
 base_case = {
     "bought": [],
-    "onhold": [],
+    "onhold": {},
     "sold": []
 }
 
@@ -37,7 +37,7 @@ def LoadTransactions():
             return json.load(transaction)
     except:
         # create a json file for today
-        open(f'{GetDateTime()}.json', 'w').close()
+        open(f'{GetDateTime()["date"]}.json', 'w').close()
         try:
             # check the yesterday's json data file, if there are any stocks onhold? if there are then return the onhold transactions to today
             with open(f"{GetDateTime('yesterday')['date']}.json", "r") as transaction:
@@ -64,9 +64,9 @@ def WriteTransactions(transactions):
         with open(f"{GetDateTime()['date']}.json", "w") as transaction:
             transaction.write(json.dumps(transactions, indent=4))
     except:
-        sys.exit(f"Unable to write to {GetDateTime()}.json file")
+        sys.exit(f"Unable to write to {GetDateTime()['date']}.json file")
 
-
+# Get live stock price using web scraping
 def GetLiveStockData(stock=DEMO_STOCK):
     try:
         URL = f'https://in.finance.yahoo.com/quote/{stock}'
@@ -80,10 +80,20 @@ def GetLiveStockData(stock=DEMO_STOCK):
             if "open" in market_status:
                 return float(stock_price)
             else:
-                return None
+                sys.exit("Stock market is closed")
         else:
             sys.exit(
                 f"Response for the {stock} returned with status code: {response.status_code}")
     except:
         sys.exit(f"Error fetching data for {stock}")
-    return None
+
+
+class Transactions():
+    def __init__(self, amount=AMOUNT):
+        self.amount = amount
+
+    def Debit(self, amt):
+        self.amount += amt
+
+    def Withdrawn(self, amt):
+        self.amount -= amt

@@ -8,3 +8,6 @@ DEMO_STOCK = 'IBM'
 
 # Enter the symbol code for the stocks to look for
 STOCKS = []
+
+# amount
+AMOUNT = 10000
